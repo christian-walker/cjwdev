@@ -1,0 +1,551 @@
+{%- style -%}
+  /* Section */
+  .ed_tabs-section#ed_section-{{ section.id }} {
+    --tab-heading-color: {{ section.settings.tab_heading_color }};
+    --tabs-alignment: {{ section.settings.tabs_alignment }};
+    --tab-line-color: {{ section.settings.tab_line_color }};
+    --tab-color-hover: {{ section.settings.tab_color_hover }};
+    --tab-color-active: {{ section.settings.tab_color_active }};
+    --tab-font-size: {{ section.settings.font_size }}px;
+    --tab-font-weight: {{ section.settings.font_weight }};
+  }
+  .ed_tabs-section {
+    padding: 20px;
+  }
+  /* Tab controls */
+  nav.ed_tabs {
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1.5rem;
+    align-items: stretch;
+    display: flex;
+    font-size: var(--tab-font-size);
+    font-weight: var(--tab-font-weight);
+    justify-content: space-between;
+    overflow: hidden;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  .ed_tabs-wrapper {
+    position: relative;
+  }
+  .ed_tabs-wrapper.is-overflowing:after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 50px; /* Width of the gradient overlay */
+    background: linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,1) 10
+    0%);
+    pointer-events: none; /* Allow mouse events like scrolling to pass through this overlay */
+  }
+  nav.ed_tabs ul {
+    align-items: center;
+    border-bottom-color: var(--tab-line-color);
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+    display: flex;
+    flex-grow: 1;
+    flex-shrink: 0;
+    justify-content: var(--tabs-alignment);
+    padding-left: 0;
+  }
+  nav.ed_tabs ul li {
+    display: block;
+  }
+  nav.ed_tabs ul li a {
+    text-decoration: none;
+    align-items: center;
+    border-bottom-color: var(--tab-line-color);
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+    color: var(--tab-heading-color);
+    display: flex;
+    justify-content: center;
+    margin-bottom: -1px;
+    padding: 0.5em 1em;
+    vertical-align: top;
+  }
+  nav.ed_tabs ul li a:hover {
+    border-bottom-color: var(--tab-color-hover);
+    color: var(--tab-color-hover);
+  }
+  nav.ed_tabs ul li.is-active a {
+    border-bottom-color: var(--tab-color-active);
+    color: var(--tab-color-active);
+  }
+  /* Tab content */
+  .ed_tab-content {
+    display: none;
+    padding: 0 18px;
+  }
+  .ed_tab-content.is-active {
+    display: block;
+  }
+  /* Block styles */
+  {%- for block in section.blocks -%}
+  .tab-{{ block.id }} {
+  max-width: {{ block.settings.text_width }};
+  {%- if block.settings.alignment == 'center' -%}
+      margin-left: auto;
+      margin-right: auto;
+      {%- elsif block.settings.alignment == 'left' -%}
+      margin-right: auto;
+      {%- elsif block.settings.alignment == 'right' -%}
+      margin-left: auto;
+      {%- endif -%}
+      }
+      {%- endfor -%}
+{%- endstyle -%}
+<div
+  class="ed_tabs-section {{ section.settings.custom_class }}"
+  id="ed_section-{{ section.id }}"
+>
+  <div class="ed_tabs-wrapper">
+    <nav class="ed_tabs">
+      <ul>
+        {%- for block in section.blocks -%}
+          {%- assign headingOverwriteID = 'tab_' | append: forloop.index | append: '_heading' -%}
+          {%- assign heading = section.settings[headingOverwriteID] | default: block.settings.heading -%}
+          {% if heading != blank %}
+            <li class="{% if forloop.first == true %}is-active{% endif %}">
+              <a href="#ed_tab{{forloop.index}}">{{ heading }}</a>
+            </li>
+          {% endif %}
+        {%- endfor -%}
+      </ul>
+    </nav>
+  </div>
+  {%- for block in section.blocks -%}
+    <div
+      class="
+        ed_tab-content tab-{{ block.id }} {% if forloop.first == true %}is-act
+        ive{% endif %}"
+      id="ed_tab{{forloop.index}}"
+    >
+      {% case block.type %}
+        {% when 'richtext' %}
+          <div
+            class="{{ block.settings.custom_class }}"
+            {{ block.shopify_attributes }}
+          >
+            {{ block.settings.richtext }}
+          </div>
+        {% when 'description' %}
+          <div
+            class="rte {{ block.settings.custom_class }}"
+            {{
+              block.shopify_attributes
+            }}
+          >
+            {{ product.description }}
+          </div>
+        {% when 'liquid' %}
+          <div
+            class="{{ block.settings.custom_class }}"
+            {{ block.shopify_attributes }}
+          >
+            {{ block.settings.liquid }}
+          </div>
+        {% when 'page' %}
+          <div
+            class="{{ block.settings.custom_class }}"
+            {{ block.shopify_attributes }}
+          >
+            {{ block.settings.page.content }}
+          </div>
+        {% when '@app' %}
+          {% render block %}
+      {% endcase %}
+    </div>
+  {%- endfor -%}
+</div>
+<script>
+  (function () {
+    const sectionElement = document.querySelector('#ed_section-{{ section.id }}');
+    const initializeTabs = (section) => {
+      const tabs = section.querySelectorAll('.ed_tabs li');
+      const tabContents = section.querySelectorAll('.ed_tab-content');
+      tabs.forEach((tab) => {
+        tab.addEventListener('click', (e) => {
+          e.preventDefault();
+          removeActiveTab();
+          addActiveTab(tab);
+        });
+      });
+      const removeActiveTab = () => {
+        tabs.forEach((tab) => {
+          tab.classList.remove('is-active');
+        });
+        tabContents.forEach((tabContent) => {
+          tabContent.classList.remove('is-active');
+        });
+      };
+      const addActiveTab = (tab) => {
+        tab.classList.add('is-active');
+        const href = tab.querySelector('a').getAttribute('href');
+        const matchingContents = section.querySelector(href);
+        matchingContents.classList.add('is-active');
+      };
+    };
+    initializeTabs(sectionElement);
+    // Detect overflow on mobile and add class to wrapper, so we can add a gradient overlay to show scrollability
+    const detectOverflowOnMobile = () => {
+      const wrapper = sectionElement.querySelector('.ed_tabs-wrapper');
+      const nav = sectionElement.querySelector('nav.ed_tabs');
+      const ul = nav.querySelector('ul');
+      const navWidth = nav.offsetWidth;
+      const ulWidth = ul.scrollWidth;
+      if (ulWidth > navWidth) {
+        wrapper.classList.add('is-overflowing');
+      } else {
+        wrapper.classList.remove('is-overflowing');
+      }
+    };
+    // Debounce is used to prevent a function from running too often, in this case on
+    resize;
+    const debounce = (func, wait) => {
+      let timeout;
+      return (...args) => {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    };
+    detectOverflowOnMobile();
+    window.addEventListener('resize', debounce(detectOverflowOnMobile, 250));
+  })();
+</script>
+{% schema %}
+ {
+  "name": "⚡ Tabbed Content",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Tab heading styles"
+    },
+    {
+      "type": "select",
+      "id": "tabs_alignment",
+      "label": "Tab Heading Alignment",
+      "options": [
+        {
+          "value": "flex-start",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "flex-end",
+          "label": "Right"
+        }
+      ],
+      "default": "flex-start"
+    },
+    {
+      "type": "color",
+      "id": "tab_heading_color",
+      "label": "Tab Heading Color",
+      "default": "#4a4a4a"
+    },
+    {
+      "type": "color",
+      "id": "tab_line_color",
+      "label": "Tab Line Color",
+      "default": "#dbdbdb"
+    },
+    {
+      "type": "color",
+      "id": "tab_color_hover",
+      "label": "Tab Color Hover",
+      "default": "#363636"
+    },
+    {
+      "type": "color",
+      "id": "tab_color_active",
+      "label": "Tab Color Active",
+      "default": "#3273dc"
+    },
+    {
+      "type": "range",
+      "id": "font_size",
+      "min": 10,
+      "max": 32,
+      "step": 1,
+      "unit": "px",
+      "label": "Font size",
+      "default": 16
+    },
+    {
+      "type": "select",
+      "id": "font_weight",
+      "label": "Font weight",
+      "options": [
+        {
+          "value": "normal",
+          "label": "Normal"
+        },
+        {
+          "value": "bold",
+          "label": "Bold"
+        }
+      ],
+      "default": "normal"
+    },
+    {
+      "type": "text",
+      "id": "custom_class",
+      "label": "Custom class",
+      "info": "Add a class to the section if you want to target it with CSS from els\n        ewhere in your theme."
+    },
+    {
+      "type": "header",
+      "content": "Overwrite Tab headings (if using app blocks)",
+      "info": "If you are using an app block, there won't be a tab heading because I\n        couldn't add that setting to the block. You can add the tab headings here instead. Be\n        careful because after you do this, re-ordering or deleting blocks will mean you are o\n        verwriting the wrong headings."
+    },
+    {
+      "type": "text",
+      "id": "tab_1_heading",
+      "label": "Tab 1",
+      "info": "This overwrites the heading for the first tab."
+    },
+    {
+      "type": "text",
+      "id": "tab_2_heading",
+      "label": "Tab 2",
+      "info": "This overwrites the heading for the second tab."
+    },
+    {
+      "type": "text",
+      "id": "tab_3_heading",
+      "label": "Tab 3",
+      "info": "This overwrites the heading for the third tab."
+    },
+    {
+      "type": "text",
+      "id": "tab_4_heading",
+      "label": "Tab 4",
+      "info": "This overwrites the heading for the fourth tab."
+    },
+    {
+      "type": "text",
+      "id": "tab_5_heading",
+      "label": "Tab 5",
+      "info": "This overwrites the heading for the fifth tab."
+    },
+    {
+      "type": "text",
+      "id": "tab_6_heading",
+      "label": "Tab 6",
+      "info": "This overwrites the heading for the sixth tab."
+    },
+    {
+      "type": "text",
+      "id": "tab_7_heading",
+      "label": "Tab 7",
+      "info": "This overwrites the heading for the seventh tab."
+    },
+    {
+      "type": "text",
+      "id": "tab_8_heading",
+      "label": "Tab 8",
+      "info": "This overwrites the heading for the eighth tab."
+    },
+    {
+      "type": "text",
+      "id": "tab_9_heading",
+      "label": "Tab 9",
+      "info": "This overwrites the heading for the ninth tab."
+    },
+    {
+      "type": "text",
+      "id": "tab_10_heading",
+      "label": "Tab 10",
+      "info": "This overwrites the heading for the tenth tab."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "richtext",
+      "name": "Rich Text",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "Rich Text"
+        },
+        {
+          "type": "richtext",
+          "id": "richtext",
+          "label": "Rich Text",
+          "default": "<p>Rich text content</p>"
+        },
+        {
+          "type": "text",
+          "id": "text_width",
+          "label": "Maximum width (use px or %)",
+          "default": "700px",
+          "info": "Full-width text areas are hard to read. So this is a container. U\n    sually less than 800px is best. Make sure you include the unit (px or %)."
+        },
+        {
+          "type": "select",
+          "id": "alignment",
+          "label": "Content alignment",
+          "options": [
+            {
+              "value": "left",
+              "label": "Left"
+            },
+            {
+              "value": "center",
+              "label": "Center"
+            },
+            {
+              "value": "right",
+              "label": "Right"
+            }
+          ],
+          "default": "left"
+        },
+        {
+          "type": "text",
+          "id": "custom_class",
+          "label": "Custom class",
+          "info": "Add a class to the block to allow for re-using your themes styles\n    or your own CSS."
+        }
+      ]
+    },
+    {
+      "type": "page",
+      "name": "Page",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "Page"
+        },
+        {
+          "type": "page",
+          "id": "page",
+          "label": "Page"
+        },
+        {
+          "type": "text",
+          "id": "text_width",
+          "label": "Maximum width (use px or %)",
+          "default": "700px",
+          "info": "Full-width text areas are hard to read. So this is a container. U\n    sually less than 800px is best. Make sure you include the unit (px or %)."
+        },
+        {
+          "type": "select",
+          "id": "alignment",
+          "label": "Content alignment",
+          "options": [
+            {
+              "value": "left",
+              "label": "Left"
+            },
+            {
+              "value": "center",
+              "label": "Center"
+            },
+            {
+              "value": "right",
+              "label": "Right"
+            }
+          ],
+          "default": "left"
+        }
+      ]
+    },
+    {
+      "type": "description",
+      "name": "Product Description",
+      "settings": [
+        {
+          "type": "header",
+          "content": "Product Description",
+          "info": "This only works on product pages."
+        },
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "Description"
+        },
+        {
+          "type": "text",
+          "id": "text_width",
+          "label": "Maximum width (use px or %)",
+          "default": "700px",
+          "info": "Full-width text areas are hard to read. So this is a container. U\nsually less than 800px is best. Make sure you include the unit (px or %)."
+        },
+        {
+          "type": "select",
+          "id": "alignment",
+          "label": "Content alignment",
+          "options": [
+            {
+              "value": "left",
+              "label": "Left"
+            },
+            {
+              "value": "center",
+              "label": "Center"
+            },
+            {
+              "value": "right",
+              "label": "Right"
+            }
+          ],
+          "default": "left"
+        },
+        {
+          "type": "text",
+          "id": "custom_class",
+          "label": "Custom class",
+          "info": "Add a class to the block to allow for re-using your themes styles\nor your own css."
+        }
+      ]
+    },
+    {
+      "type": "liquid",
+      "name": "Liquid",
+      "settings": [
+        {
+          "type": "liquid",
+          "id": "heading",
+          "label": "Heading",
+          "default": "Liquid"
+        },
+        {
+          "type": "liquid",
+          "id": "liquid",
+          "label": "Liquid",
+          "default": "Add code here"
+        }
+      ]
+    },
+    {
+      "type": "@app"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Tabbed Content"
+    }
+  ]
+}
+{% endschema %}
