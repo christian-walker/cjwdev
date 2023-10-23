@@ -131,6 +131,43 @@
         "padding_bottom": 12
       }
     },
+    "2dc63743-bd00-4ba0-b3a5-8a65a9eb167b": {
+      "type": "ed_tabs",
+      "blocks": {
+        "b1b7d880-4052-4b7a-afb6-c3d46ce2647e": {
+          "type": "description",
+          "settings": {
+            "heading": "Description",
+            "text_width": "700px",
+            "alignment": "left",
+            "custom_class": ""
+          }
+        }
+      },
+      "block_order": [
+        "b1b7d880-4052-4b7a-afb6-c3d46ce2647e"
+      ],
+      "settings": {
+        "tabs_alignment": "flex-start",
+        "tab_heading_color": "#4a4a4a",
+        "tab_line_color": "#dbdbdb",
+        "tab_color_hover": "#363636",
+        "tab_color_active": "#3273dc",
+        "font_size": 16,
+        "font_weight": "normal",
+        "custom_class": "",
+        "tab_1_heading": "",
+        "tab_2_heading": "",
+        "tab_3_heading": "",
+        "tab_4_heading": "",
+        "tab_5_heading": "",
+        "tab_6_heading": "",
+        "tab_7_heading": "",
+        "tab_8_heading": "",
+        "tab_9_heading": "",
+        "tab_10_heading": ""
+      }
+    },
     "image-with-text": {
       "type": "image-with-text",
       "blocks": {
@@ -232,6 +269,7 @@
   },
   "order": [
     "main",
+    "2dc63743-bd00-4ba0-b3a5-8a65a9eb167b",
     "image-with-text",
     "multicolumn",
     "related-products"
